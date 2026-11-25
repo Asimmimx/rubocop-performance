@@ -225,6 +225,40 @@ RSpec.describe RuboCop::Cop::Performance::RedundantMerge, :config do
     end
   end
 
+  context 'when the arguments contain a comment' do
+    it "doesn't autocorrect when a comment is above a pair" do
+      source = <<~RUBY
+        hash = {}
+        hash.merge!(
+          # comment
+          a: 1,
+          b: 2
+        )
+      RUBY
+      new_source = autocorrect_source(source)
+      expect(new_source).to eq(source)
+    end
+
+    it "doesn't autocorrect when a pair has a trailing comment" do
+      source = <<~RUBY
+        hash.merge!(
+          a: 1 # comment
+        )
+      RUBY
+      new_source = autocorrect_source(source)
+      expect(new_source).to eq(source)
+    end
+
+    it 'still registers an offense' do
+      offenses = inspect_source(<<~RUBY)
+        hash.merge!(
+          a: 1 # comment
+        )
+      RUBY
+      expect(offenses.size).to eq(1)
+    end
+  end
+
   it 'does not register an offense when using an empty hash argument' do
     expect_no_offenses(<<~RUBY)
       foo.merge!({})

@@ -53,6 +53,10 @@ module RuboCop
           each_redundant_merge(node) do |redundant_merge_node|
             message = message(node)
             add_offense(redundant_merge_node, message: message) do |corrector|
+              # The replacement is built from the keys and values only, so any
+              # comment inside the `merge!` call would be lost.
+              next if processed_source.contains_comment?(node.source_range)
+
               redundant_merge_candidate(node) do |receiver, pairs|
                 new_source = to_assignments(receiver, pairs).join("\n")
 
